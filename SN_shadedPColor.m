@@ -41,7 +41,7 @@ if nargin<2
 end
     
 persistent argsNameToCheck;
-if isempty(argsNameToCheck);
+if isempty(argsNameToCheck)
     argsNameToCheck = {...
         'cMin',... %1
         'cMax',... %2
@@ -57,7 +57,8 @@ if isempty(argsNameToCheck);
         'colormap',... %12
         'shadingExp',... %13
         'shadingFact',... %14
-        'reverseShade'... %15
+        'reverseShade',... %15
+        'noColorbar'...
         };
                         
 end
@@ -70,6 +71,7 @@ c_max = NaN;
 s_min = NaN;
 s_max = NaN;
 reverseShade = false;
+noColorbar = false;
 
 n = 4;
 if nargin<4
@@ -246,6 +248,10 @@ while (n_items > 0)
             reverseShade = true;
             index = index +1;
             n_items = n_items-1;
+        case 16 % noColorbar
+            noColorbar = true;
+            index = index +1;
+            n_items = n_items-1;
     end
 end
 
@@ -310,8 +316,11 @@ s(s<1/size(get(0,'defaultfigurecolormap'),1)) = 1/size(get(0,'defaultfigurecolor
 s(s>1) = 1;
 s = -s;
 
-ax = subplot('position',[0.075 0.15 .785 .8]);
+if (~noColorbar)
+    subplot('position',[0.075 0.15 .785 .8]);
+end
 h_c = pcolor(x,y, c);
+ax = gca;
 
 caxis([-1 1]);
 if reverseShade
@@ -330,29 +339,34 @@ set(h_s,'FaceColor','flat');
 set(h_s,'FaceAlpha','flat');
 % ylabel('depth [m]');
 % xlabel('time [yearday 2015, UTC]');
+axis(ax,'ij');
+grid(ax,'on');
+box(ax,'on');
 
+if (~noColorbar)
 
-cx(1) = subplot('position',[0.87 0.15 .01 .8]);
-x = [0; 1];
-y = linspace(c_min,c_max,floor(size(colormap,1)/2));
-c = repmat(linspace(0,1,floor(size(colormap,1)/2)),[2 1])';
-contourf(x,y,c,...
-    floor(size(colormap,1)/2),'linestyle','none');
-caxis([-1 1])
-set(gca,'yAxisLocation','right','tickLength',[0.01 0.005],'tickDir','in','xtick',[])
-% ylabel('temperature [$^\circ$C]');
+    cx(1) = subplot('position',[0.87 0.15 .01 .8]);
+    x = [0; 1];
+    y = linspace(c_min,c_max,floor(size(colormap,1)/2));
+    c = repmat(linspace(0,1,floor(size(colormap,1)/2)),[2 1])';
+    contourf(x,y,c,...
+        floor(size(colormap,1)/2),'linestyle','none');
+    caxis([-1 1])
+    set(gca,'yAxisLocation','right','tickLength',[0.01 0.005],'tickDir','in','xtick',[])
+    % ylabel('temperature [$^\circ$C]');
+    
+    cx(2) = subplot('position',[0.94 0.15 .01 .8]);
+    x = [0; 1];
+    y = linspace(s_min,s_max,floor(size(colormap,1)/2));
+    c = repmat(linspace(0,1,floor(size(colormap,1)/2)),[2 1])';
+    c = -(c.^(shading_exp+1));
+    contourf(x,y,c,...
+        floor(size(colormap,1)/2),'linestyle','none');
+    caxis([-1 1])
+    set(gca,'yAxisLocation','right','tickLength',[0.01 0.005],'tickDir','in','xtick',[])
+    % ylabel('$\partial \rho/\partial z$ [kg/m$^4$] $\times 10^{-3}$');
+else
+    cx = [];
+end
 
-cx(2) = subplot('position',[0.94 0.15 .01 .8]);
-x = [0; 1];
-y = linspace(s_min,s_max,floor(size(colormap,1)/2));
-c = repmat(linspace(0,1,floor(size(colormap,1)/2)),[2 1])';
-c = -(c.^(shading_exp+1));
-contourf(x,y,c,...
-    floor(size(colormap,1)/2),'linestyle','none');
-caxis([-1 1])
-set(gca,'yAxisLocation','right','tickLength',[0.01 0.005],'tickDir','in','xtick',[])
-% ylabel('$\partial \rho/\partial z$ [kg/m$^4$] $\times 10^{-3}$');
-axis ij;
-grid on;
-box on;
 end
